@@ -2,7 +2,7 @@ from flask import Flask, request, render_template
 from flask_mysqldb import MySQL
 from urllib.parse import urlparse, parse_qs
 from datetime import datetime
-import yaml_parse
+import yaml_parser
 
 app = Flask(__name__)
 
@@ -13,20 +13,28 @@ app.config['MYSQL_PASSWORD'] = 'root'
 app.config['MYSQL_DB'] = 'syberry_test'
 
 mysql = MySQL(app)
-cur1 = mysql.connection.cursor()
-cur1.execute(yaml_parse.statements[0])
+
+
+@app.route('/input')
+def insert_data():
+    cur1 = mysql.connection.cursor()
+    for i in range(len(yaml_parser.statements)):
+        cur1.execute(yaml_parser.statements[i])
+    games = cur1.execute('''SELECT * FROM games''')
+    if games > 0:
+        games_info = cur1.fetchall()
+    return render_template('output_games.html', games_details=games_info)
+
 
 @app.route('/toys', methods=['GET'])
 def get_param():
-    temp = request.args.get('name')
-    # cur = mysql.connection.cursor()
-    # cur.execute('''INSERT INTO toys (toy_id, name, status, status_updated) VALUES (4, 'car', 'ok', '2018-03-20')''')
-    # toys = cur.execute('''SELECT * FROM toys''')
-    # if toys > 0:
-        #toys_details = cur.fetchall()
-        #print(type(toys_details))
-    return temp
-    # render_template('output.html', toys_details=toys_details)
+    # temp = request.args.get('name')
+    cur = mysql.connection.cursor()
+    toys = cur.execute('''SELECT * FROM toys''')
+    if toys > 0:
+        toys_details = cur.fetchall()
+    return render_template('output.html', toys_details=toys_details)
+
 
 # getting parameters from "games" table
 @app.route('/games', methods=['GET'])
@@ -51,6 +59,7 @@ def get_param_from_games():
                             [games_date_to])
     else:
         print('Parameter not found')
+        games = cur.execute('''SELECT * FROM games''')
     if games > 0:
         games_info = cur.fetchall()
     return render_template('output_games.html', games_details=games_info)
