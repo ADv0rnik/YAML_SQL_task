@@ -3,6 +3,7 @@ from flask_mysqldb import MySQL
 from urllib.parse import urlparse, parse_qs
 from datetime import datetime
 
+
 app = Flask(__name__)
 
 # connecting to DB
@@ -29,7 +30,6 @@ def get_param():
 # getting parameters from "games" table
 @app.route('/games', methods=['GET'])
 def get_param_from_games():
-    global games_details
     url = request.url
     parsed_url = urlparse(url)
     dates_limits = {'date_from', 'date_to'}
@@ -50,20 +50,15 @@ def get_param_from_games():
                             [games_date_to])
     else:
         print('Parameter not found')
-
-    return render_template('output_games.html', games_details=get_g_d(games, cur))
+    if games > 0:
+        games_info = cur.fetchall()
+    return render_template('output_games.html', games_details=games_info)
 
 
 # simple function to convert dates
 def date_converter(date : str):
     date_time = datetime.strptime(date, '%Y%m%d').strftime('%Y-%m-%d')
     return date_time
-
-# function to build a result array
-def get_g_d(games: int, cur):
-    if games > 0:
-        games_info = cur.fetchall()
-    return games_info
 
 
 if __name__ == '__main__':
