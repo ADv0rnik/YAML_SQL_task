@@ -15,17 +15,6 @@ app.config['MYSQL_DB'] = 'syberry_test'
 mysql = MySQL(app)
 
 
-@app.route('/input')
-def insert_data():
-    cur1 = mysql.connection.cursor()
-    for i in range(len(yaml_parser.statements)):
-        cur1.execute(yaml_parser.statements[i])
-    games = cur1.execute('''SELECT * FROM games''')
-    if games > 0:
-        games_info = cur1.fetchall()
-    return render_template('output_games.html', games_details=games_info)
-
-
 @app.route('/toys', methods=['GET'])
 def get_param():
     # temp = request.args.get('name')
@@ -44,6 +33,10 @@ def get_param_from_games():
     dates_limits = {'date_from', 'date_to'}
     dic = parse_qs(parsed_url.query)
     cur = mysql.connection.cursor()
+    # insert data into 'games' table
+    for i in range(len(yaml_parser.statements)):
+        cur.execute(yaml_parser.statements[i])
+    # get parameters from the request
     if dates_limits.issubset(dic):
         games_date_from = date_converter(dic.get('date_from')[0])
         games_date_to = date_converter(dic.get('date_to')[0])
