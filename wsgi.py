@@ -5,6 +5,7 @@ from datetime import datetime
 
 app = Flask(__name__)
 
+# connecting to DB
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = 'root'
@@ -25,30 +26,31 @@ def get_param():
     return temp
     # render_template('output.html', toys_details=toys_details)
 
-
+# getting parameters from "games" table
 @app.route('/games', methods=['GET'])
-def get_param1():
-    #games_date_from = date_converter(request.args.get('date_from'))
-    #games_date_to = date_converter(request.args.get('date_to'))
+def get_param_from_games():
     url = request.url
     parsed_url = urlparse(url)
-    dic=parse_qs(parsed_url.query)
-    if 'date_from' in dic:
-        games_date_from = date_converter(dic.get('date_from')[0])
-        print(games_date_from)
+    dates_limits = {'date_from', 'date_to'}
+    dic = parse_qs(parsed_url.query)
     cur = mysql.connection.cursor()
-    '''
-     games = cur.execute(SELECT * FROM games WHERE date >= %s, [games_date_from])
-    if games > 0:
-        games_details = cur.fetchall()
-        #print(type(toys_details))
-    '''
-    print(dic)
-    return request.query_string
-        #render_template('output_games.html', games_details=games_details)
+    if dates_limits.issubset(dic):
+        games_date_from = date_converter(dic.get('date_from')[0])
+        games_date_to = date_converter(dic.get('date_to')[0])
+        games = cur.execute('''SELECT * FROM games WHERE date >= % s AND date <= %s''', [games_date_from, games_date_to])
+        if games > 0:
+            games_details = cur.fetchall()
+    elif 'date_from' in dic:
+        games_date_from = date_converter(dic.get('date_from')[0])
+    elif 'date_to' in dic:
+        games_date_to = date_converter(dic.get('date_to')[0])
+    else:
+        print('Parameter not found')
+    return render_template('output_games.html', games_details=games_details)
 
 
-def date_converter(date:str):
+# simple function to convert dates
+def date_converter(date : str):
     date_time = datetime.strptime(date, '%Y%m%d').strftime('%Y-%m-%d')
     return date_time
 
