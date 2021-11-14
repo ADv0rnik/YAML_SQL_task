@@ -2,7 +2,7 @@ from flask import Flask, request, render_template
 from flask_mysqldb import MySQL
 from urllib.parse import urlparse, parse_qs
 from datetime import datetime
-
+import yaml_parse
 
 app = Flask(__name__)
 
@@ -13,7 +13,8 @@ app.config['MYSQL_PASSWORD'] = 'root'
 app.config['MYSQL_DB'] = 'syberry_test'
 
 mysql = MySQL(app)
-
+cur1 = mysql.connection.cursor()
+cur1.execute(yaml_parse.statements[0])
 
 @app.route('/toys', methods=['GET'])
 def get_param():
