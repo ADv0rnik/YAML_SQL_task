@@ -29,6 +29,7 @@ def get_param():
 # getting parameters from "games" table
 @app.route('/games', methods=['GET'])
 def get_param_from_games():
+    global games_details
     url = request.url
     parsed_url = urlparse(url)
     dates_limits = {'date_from', 'date_to'}
@@ -37,22 +38,32 @@ def get_param_from_games():
     if dates_limits.issubset(dic):
         games_date_from = date_converter(dic.get('date_from')[0])
         games_date_to = date_converter(dic.get('date_to')[0])
-        games = cur.execute('''SELECT * FROM games WHERE date >= % s AND date <= %s''', [games_date_from, games_date_to])
-        if games > 0:
-            games_details = cur.fetchall()
+        games = cur.execute('''SELECT * FROM games WHERE date >= % s AND date <= %s''',
+                            [games_date_from, games_date_to])
     elif 'date_from' in dic:
         games_date_from = date_converter(dic.get('date_from')[0])
+        games = cur.execute('''SELECT * FROM games WHERE date >= % s''',
+                            [games_date_from])
     elif 'date_to' in dic:
         games_date_to = date_converter(dic.get('date_to')[0])
+        games = cur.execute('''SELECT * FROM games WHERE date <= % s''',
+                            [games_date_to])
     else:
         print('Parameter not found')
-    return render_template('output_games.html', games_details=games_details)
+
+    return render_template('output_games.html', games_details=get_g_d(games, cur))
 
 
 # simple function to convert dates
 def date_converter(date : str):
     date_time = datetime.strptime(date, '%Y%m%d').strftime('%Y-%m-%d')
     return date_time
+
+# function to build a result array
+def get_g_d(games: int, cur):
+    if games > 0:
+        games_info = cur.fetchall()
+    return games_info
 
 
 if __name__ == '__main__':
